@@ -1,9 +1,19 @@
 char* Jadwal[] = {"IMSAK ","SUBUH ", "TERBIT", "DZUHUR", "ASHAR ", "MAGRIB", "ISYA' "};
 char* jadwalAzzan[] = {"SUBUH","DZUHUR", "ASHAR", "MAGRIB", "ISYA'"};
+char* Hari[]  = {"MINGGU","SENIN","SELASA","RABU","KAMIS","JUM'AT","SABTU"};
+char* pasar[]  = {"WAGE", "KLIWON", "LEGI", "PAHING", "PON"}; 
+char * namaBulanHijriah[] = {
+    "MUHARRAM", "SHAFAR", "RABIUL AWAL",
+    "RABIUL AKHIR", "JUMADIL AWAL", 
+    "JUMADIL AKHIR", "RAJAB",
+    "SYA'BAN", "RAMADHAN", "SYAWAL",
+    "DZULQA'DAH", "DZULHIJAH"
+};
 
 void showDisplay(){
   static uint32_t saveTimer = 0;
-  static uint8_t sNum = 0;
+  static uint32_t saveDate = 0;
+  static uint8_t sNum,dNum;
   static uint32_t sv = 0;
 
   RtcDateTime now = Rtc.GetDateTime();
@@ -22,21 +32,45 @@ void showDisplay(){
   char timeBuf[15];
   snprintf(timeBuf, sizeof(timeBuf), "%s %02d:%02d", Jadwal[sNum], hh, mm);
 
-  char tm[6];
-  snprintf(tm, sizeof(tm), (now.Second()%2)?"%02d:%02d":"%02d %02d",now.Hour(), now.Minute());
-
-  char dt[12];
-  snprintf(dt, sizeof(dt), "%02d:%02d:%04d",now.Day(), now.Month(), now.Year());
-
-  lcd.setCursor(0,0);
+  lcd.setCursor(0,1);
   lcd.print(timeBuf);
   
-  lcd.setCursor(0,1);
+  if(millis() - saveDate > 1500){
+   saveDate= millis();
+   dNum = (dNum + 1) % 3;
+   lcd.setCursor(6,0);
+   lcd.print(F("          "));
+  }
+
+  switch(dNum){
+    case 0 :
+     char dt[12];
+     snprintf(dt, sizeof(dt), "%02d:%02d:%04d",now.Day(), now.Month(), now.Year());
+     lcd.setCursor(6,0);
+     dwCtr(6,0,dt);
+    break;
+
+    case 1 :
+     char hr[7];
+     snprintf(hr, sizeof(hr), "%s" , Hari[now.DayOfWeek()]);
+     lcd.setCursor(6,0);
+     dwCtr(6,0,hr);
+    break;
+
+    case 2 :
+     char ps[7];
+     snprintf(ps, sizeof(ps), "%s" , pasar[jumlahhari() % 5]);
+     lcd.setCursor(6,0);
+     dwCtr(6,0,ps);
+    break;
+  };
+  
+  char tm[6];
+  snprintf(tm, sizeof(tm), (now.Second()%2)?"%02d:%02d":"%02d %02d",now.Hour(), now.Minute());
+     
+  lcd.setCursor(0,0);
   lcd.print(tm);
 
-  lcd.setCursor(6,1);
-  lcd.print(dt);
-   
 }
 
 void drawAzzan()
