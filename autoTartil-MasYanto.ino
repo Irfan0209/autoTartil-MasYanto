@@ -13,6 +13,8 @@
 // Atur batas waktu WDT (misalnya 15 detik)
 constexpr uint8_t WDT_TIMEOUT = 15;
 
+#define potPin 35
+
 //EEPROM AUTO TARTIL
 #define EEPROM_SIZE 3000
 
@@ -71,6 +73,7 @@ struct WaktuConfig {
 
 enum Show{
   ANIM_CLOCK,
+  ANIM_VOLUME,
   ANIM_ADZAN
 };
 Show show = ANIM_CLOCK;
@@ -154,6 +157,12 @@ bool      butuhHitungJadwal = true;
 
 bool isTartilPlaying = false; // Ganti jadi true saat MP3 mulai menyala
 
+//varibel untuk pengaturan volume
+uint8_t currentVolume;
+bool showingVolume = false;
+int8_t lastVolume = -1;
+uint32_t lastReadTime = 0;
+
 byte ikonSpeaker[8] = {
   0b00001, //      *
   0b00011, //     **
@@ -191,6 +200,12 @@ byte speakerMute[8] = {
   B00000,
   B00000
 };
+
+byte frame1[8] = {B11111,0,0,0,0,0,0,0}; // Atas
+byte frame2[8] = {B00001,B00001,B00001,B00001,B00001,B00001,B00001,B00001}; // Kanan
+byte frame3[8] = {0,0,0,0,0,0,0,B11111}; // Bawah
+byte frame4[8] = {B10000,B10000,B10000,B10000,B10000,B10000,B10000,B10000}; // Kiri
+
 
 void getData(const String& input) {
   const char* data = input.c_str();
@@ -396,7 +411,35 @@ void AP_init() {
  
 }
 
-
+void startUpAnimation() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(F("SYSTEM STARTING"));
+  
+  // Animasi spinner berputar selama 3 detik (20 frame)
+  for (uint8_t i = 0; i < 20; i++) {
+    lcd.setCursor(15, 0); // Pojok kanan atas
+    switch (i % 4) {
+      case 0: lcd.write(byte(5)); break;
+      case 1: lcd.write(byte(6)); break;
+      case 2: lcd.write(byte(7)); break;
+      case 3: lcd.write(byte(0)); break;
+    };
+    
+    // Tambahkan titik-titik di baris kedua agar tidak kosong
+    if (i % 4 == 0) {
+      lcd.setCursor(i/1.5, 1); // Titik berjalan perlahan
+      lcd.print(".");
+    }
+    
+    delay(150); 
+  }
+  
+  lcd.clear();
+  lcd.print(F(" SYSTEM READY! "));
+  delay(1000);
+  lcd.clear();
+}
 
 void setup() {
   EEPROM.begin(EEPROM_SIZE);//
@@ -409,7 +452,7 @@ void setup() {
   
   lcd.begin();
   lcd.backlight();
-  lcd.createChar(0, ikonSpeaker);
+  //lcd.createChar(0, ikonSpeaker);
   lcd.createChar(1, speakerMute);
 //  lcd.createChar(2, specFrame1);
 //  lcd.createChar(3, specFrame2);
@@ -417,10 +460,13 @@ void setup() {
   lcd.createChar(2, barLow);
   lcd.createChar(3, barMid);
   lcd.createChar(4, barHigh);
-  
+  lcd.createChar(5, frame1);
+  lcd.createChar(6, frame2);
+  lcd.createChar(7, frame3);
+  lcd.createChar(0, frame4);
 
-  dwCtr(0,0,"AUTO TARTIL");
-  dwCtr(0,1,"V1");
+//  dwCtr(0,0,"AUTO TARTIL");
+//  dwCtr(0,1,"V1");
   
   uint8_t rtn = I2C_ClearBus(); // clear the I2C bus first before calling Wire.begin()
     if (rtn != 0) {
@@ -441,7 +487,7 @@ void setup() {
   Rtc.Enable32kHzPin(false);
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
   
-  delay(1000);
+  startUpAnimation();
   Buzzer(0);
   Serial.begin(9600);
   dfSerial.begin(9600, SERIAL_8N1, /*rx =*/16, /*tx =*/17);
@@ -489,10 +535,15 @@ void loop() {
   islam();
   check();
   animateSpectrum();
+  readSensor();
   
   switch(show){
     case ANIM_CLOCK : 
       showDisplay();
+    break;
+
+    case ANIM_VOLUME: 
+      updateVolumeLCD(currentVolume);
     break;
 
     case ANIM_ADZAN :

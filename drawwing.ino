@@ -124,6 +124,7 @@ void animateSpectrum() {
   // 1. Cetak logo speaker di kolom 14
 //  lcd.setCursor(13, 1);
 //  lcd.write(byte(0));
+  if(adzan) return;
   
   if (isTartilPlaying) {
     static uint32_t prevSpectrumMillis = 0;
@@ -131,11 +132,7 @@ void animateSpectrum() {
     // Update animasi setiap 250 milidetik
     if (millis() - prevSpectrumMillis >= 150) { 
       prevSpectrumMillis = millis();
-
-//      // 2. Cetak SATU KOTAK yang berisi 3 bar di kolom 15
-//      lcd.setCursor(15, 1);
-//      // Acak frame 1, 2, atau 3 untuk memberi efek audio bergerak
-//      lcd.write(byte(random(2, 4)));    
+      
       // Cetak 3 bar acak di indeks 13, 14, dan 15
       for (int i = 13; i <= 15; i++) {
         lcd.setCursor(i, 1);
@@ -148,5 +145,21 @@ void animateSpectrum() {
     // Bersihkan 2 kotak tersebut jika tartil mati
     lcd.setCursor(13, 1);
     lcd.print("   ");
+  }
+}
+
+// Fungsi menampilkan bar volume
+void updateVolumeLCD(uint8_t vol) {
+  lcd.setCursor(0, 0);
+  lcd.print("Volume: ");
+  lcd.print(vol);
+  lcd.print(" / 30  "); // Spasi untuk hapus sisa angka lama
+
+  // Membuat Progress Bar sederhana [##########-----]
+  lcd.setCursor(0, 1);
+  uint8_t barLength = map(vol, 0, 30, 0, 16); // Map ke 16 karakter LCD
+  for (uint8_t i = 0; i < 16; i++) {
+    if (i < barLength) lcd.print((char)255); // Karakter blok penuh
+    else lcd.print("-");
   }
 }
