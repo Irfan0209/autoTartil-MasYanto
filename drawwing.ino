@@ -34,6 +34,7 @@ void showDisplay(){
 
   lcd.setCursor(0,1);
   lcd.print(timeBuf);
+  //dwCtr(0,1,timeBuf);
   
   if(millis() - saveDate > 1500){
    saveDate= millis();
@@ -44,8 +45,8 @@ void showDisplay(){
 
   switch(dNum){
     case 0 :
-     char dt[12];
-     snprintf(dt, sizeof(dt), "%02d:%02d:%04d",now.Day(), now.Month(), now.Year());
+     char dt[10];
+     snprintf(dt, sizeof(dt), "%02d/%02d/%02d",now.Day(), now.Month(), (now.Year()-2000));
      lcd.setCursor(6,0);
      dwCtr(6,0,dt);
     break;
@@ -68,8 +69,9 @@ void showDisplay(){
   char tm[6];
   snprintf(tm, sizeof(tm), (now.Second()%2)?"%02d:%02d":"%02d %02d",now.Hour(), now.Minute());
      
-  lcd.setCursor(0,0);
-  lcd.print(tm);
+  lcd.setCursor(0,0); lcd.print(tm);
+  
+  lcd.setCursor(5,0); lcd.print(F("|"));
 
 }
 
@@ -114,4 +116,37 @@ void dwCtr(int8_t x, int8_t y, String Msg){
    uint16_t   c = int8_t((DWidth-x-tw)/2);
    lcd.setCursor(x+c,y);
    lcd.print(Msg);
+}
+
+
+
+void animateSpectrum() {
+  // 1. Cetak logo speaker di kolom 14
+//  lcd.setCursor(13, 1);
+//  lcd.write(byte(0));
+  
+  if (isTartilPlaying) {
+    static uint32_t prevSpectrumMillis = 0;
+  
+    // Update animasi setiap 250 milidetik
+    if (millis() - prevSpectrumMillis >= 150) { 
+      prevSpectrumMillis = millis();
+
+//      // 2. Cetak SATU KOTAK yang berisi 3 bar di kolom 15
+//      lcd.setCursor(15, 1);
+//      // Acak frame 1, 2, atau 3 untuk memberi efek audio bergerak
+//      lcd.write(byte(random(2, 4)));    
+      // Cetak 3 bar acak di indeks 13, 14, dan 15
+      for (int i = 13; i <= 15; i++) {
+        lcd.setCursor(i, 1);
+        // Pilih tinggi bar secara acak dari karakter 1 (Low), 2 (Mid), atau 3 (High)
+        lcd.write(byte(random(2, 4))); 
+      }
+
+    }
+  } else {
+    // Bersihkan 2 kotak tersebut jika tartil mati
+    lcd.setCursor(13, 1);
+    lcd.print("   ");
+  }
 }

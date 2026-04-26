@@ -64,8 +64,7 @@ void cekDanPutarSholatNonBlocking() {
       Serial.println("triggerDetik: " + String(triggerDetik));
       Serial.println("detikSekarang: " + String(detikSekarang));
       //================================/*/
-      lcd.setCursor(15,0);
-      lcd.write(0);
+      isTartilPlaying = true;
       dfplayer.volume(volumeDFPlayer);
       digitalWrite(RELAY_PIN, LOW);//relay NYALA
       currentCfg = &cfg;
@@ -176,8 +175,7 @@ void cekSelesaiTartil() {
 
 void matikanSemuaAudio() {
   dfplayer.stop();
-  lcd.setCursor(15,0);
-  lcd.print(" ");
+  isTartilPlaying = false;
   digitalWrite(RELAY_PIN, HIGH);//relay mati
   relayMenungguMati = false;
   tartilSedangDiputar = false;
@@ -196,8 +194,7 @@ void cekSelesaiAdzan() {
       dfplayer.stop();
       digitalWrite(RELAY_PIN, HIGH);//relay mati
       adzanSedangDiputar = false;
-      lcd.setCursor(15,0);
-      lcd.print(" ");
+      isTartilPlaying = false;
      // Serial.println("Adzan selesai. Relay dimatikan.");
     }
   }

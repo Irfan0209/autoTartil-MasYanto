@@ -152,6 +152,8 @@ bool      autoTartilEnable = true;
 bool      voiceClock = true; 
 bool      butuhHitungJadwal = true;
 
+bool isTartilPlaying = false; // Ganti jadi true saat MP3 mulai menyala
+
 byte ikonSpeaker[8] = {
   0b00001, //      *
   0b00011, //     **
@@ -163,6 +165,32 @@ byte ikonSpeaker[8] = {
   0b00000  //
 };
 
+// 1: Bar Rendah
+byte barLow[8] = {
+  B00000, B00000, B00000, B00000, B00000, B00000, B11111, B11111
+};
+
+// 2: Bar Sedang
+byte barMid[8] = {
+  B00000, B00000, B00000, B00000, B11111, B11111, B11111, B11111
+};
+
+// 3: Bar Tinggi
+byte barHigh[8] = {
+  B00000, B00000, B11111, B11111, B11111, B11111, B11111, B11111
+};
+
+// Logo Speaker Mati / Mute (Speaker dengan tanda X)
+byte speakerMute[8] = {
+  B00000,
+  B10001,
+  B01010,
+  B00100,
+  B01010,
+  B10001,
+  B00000,
+  B00000
+};
 
 void getData(const String& input) {
   const char* data = input.c_str();
@@ -382,6 +410,14 @@ void setup() {
   lcd.begin();
   lcd.backlight();
   lcd.createChar(0, ikonSpeaker);
+  lcd.createChar(1, speakerMute);
+//  lcd.createChar(2, specFrame1);
+//  lcd.createChar(3, specFrame2);
+//  lcd.createChar(4, specFrame3);
+  lcd.createChar(2, barLow);
+  lcd.createChar(3, barMid);
+  lcd.createChar(4, barHigh);
+  
 
   dwCtr(0,0,"AUTO TARTIL");
   dwCtr(0,1,"V1");
@@ -441,7 +477,7 @@ void loop() {
   if (sudahEksekusi && millis() - lastTriggerMillis > 60000) {
     sudahEksekusi = false;
   }
-   esp_task_wdt_reset();
+  esp_task_wdt_reset();
   server.handleClient();
   bacaDataSerial();
   cekDanPutarSholatNonBlocking();
@@ -452,6 +488,7 @@ void loop() {
   getStatusRun();
   islam();
   check();
+  animateSpectrum();
   
   switch(show){
     case ANIM_CLOCK : 
@@ -636,8 +673,7 @@ void parseData(const char* data) {
       if (durasi > 0) {
         dfplayer.volume(volumeDFPlayer);
         dfplayer.playFolder(folder,file);
-        lcd.setCursor(15,1);
-        lcd.write(0);
+        isTartilPlaying = true;
         digitalWrite(RELAY_PIN, LOW); // Relay NYALA
         tartilCounter       = 0;
         targetDurasi        = durasi;
@@ -659,8 +695,7 @@ void parseData(const char* data) {
     if (durasi > 0) {
       dfplayer.volume(volumeDFPlayer);
       dfplayer.playFolder(2,file);
-      lcd.setCursor(15,1);
-      lcd.write(0);
+      isTartilPlaying = true;
       digitalWrite(RELAY_PIN, LOW); // Relay NYALA
       adzanCounter             = 0;
       targetDurasiAdzan        = durasi;
@@ -673,8 +708,7 @@ void parseData(const char* data) {
   // --- Parsing STOP ---
   else if (strncmp(data, "STOP", 4) == 0) {
     dfplayer.stop();
-    lcd.setCursor(15,1);
-    lcd.print(" ");
+    isTartilPlaying = false;
     digitalWrite(RELAY_PIN, HIGH); // Relay MATI
     tartilSedangDiputar = false;
     adzanSedangDiputar  = false;
@@ -804,8 +838,7 @@ if (manualSedangDiputar) {
     
     if (tartilCounter >= targetDurasi) {
       dfplayer.stop();
-      lcd.setCursor(15,0);
-      lcd.print(" ");
+      isTartilPlaying = false;
       digitalWrite(RELAY_PIN, HIGH);//relay mati
       manualSedangDiputar = false;
       //Serial.println("Manual tartil selesai.");
@@ -823,8 +856,7 @@ void cekSelesaiAdzanManual() {
 
     if (adzanCounter >= targetDurasiAdzan) {
       dfplayer.stop();
-      lcd.setCursor(15,0);
-      lcd.print(" ");
+      isTartilPlaying = false;
       digitalWrite(RELAY_PIN, HIGH);//relay mati
       adzanManualSedangDiputar = false;
       adzanCounter=0;
