@@ -28,7 +28,7 @@ void islam() {
       JWS.setIkhtiMa = dataIhty[3];
       JWS.setIkhtiIs = dataIhty[4];
       JWS.setIkhtiIm = dataIhty[5];
-      Hijir.Update(now.Year(), now.Month(), now.Day(), config.Correction);
+      //Hijir.Update(now.Year(), now.Month(), now.Day(), config.Correction);
       
 //      Serial.print(F("[INFO] Kalkulasi ke-"));
 //      Serial.println(i + 1);

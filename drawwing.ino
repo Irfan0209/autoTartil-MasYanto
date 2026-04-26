@@ -2,13 +2,6 @@ char* Jadwal[] = {"IMSAK ","SUBUH ", "TERBIT", "DZUHUR", "ASHAR ", "MAGRIB", "IS
 char* jadwalAzzan[] = {"SUBUH","DZUHUR", "ASHAR", "MAGRIB", "ISYA'"};
 char* Hari[]  = {"MINGGU","SENIN","SELASA","RABU","KAMIS","JUM'AT","SABTU"};
 char* pasar[]  = {"WAGE", "KLIWON", "LEGI", "PAHING", "PON"}; 
-char * namaBulanHijriah[] = {
-    "MUHARRAM", "SHAFAR", "RABIUL AWAL",
-    "RABIUL AKHIR", "JUMADIL AWAL", 
-    "JUMADIL AKHIR", "RAJAB",
-    "SYA'BAN", "RAMADHAN", "SYAWAL",
-    "DZULQA'DAH", "DZULHIJAH"
-};
 
 void showDisplay(){
   static uint32_t saveTimer = 0;
@@ -121,9 +114,7 @@ void dwCtr(int8_t x, int8_t y, String Msg){
 
 
 void animateSpectrum() {
-  // 1. Cetak logo speaker di kolom 14
-//  lcd.setCursor(13, 1);
-//  lcd.write(byte(0));
+  
   if(adzan) return;
   if(showingVolume) return;
   
@@ -132,20 +123,17 @@ void animateSpectrum() {
   if (isTartilPlaying) {
     static uint32_t prevSpectrumMillis = 0;
     flagShow = true;
-    // Update animasi setiap 250 milidetik
+   
     if (millis() - prevSpectrumMillis >= 100) { 
       prevSpectrumMillis = millis();
       
-      // Cetak 3 bar acak di indeks 13, 14, dan 15
-      for (int i = 13; i <= 15; i++) {
+      for (uint8_t i = 13; i <= 15; i++) {
         lcd.setCursor(i, 1);
-        // Pilih tinggi bar secara acak dari karakter 1 (Low), 2 (Mid), atau 3 (High)
-        lcd.write(byte(random(2, 4))); 
+        lcd.write(byte(random(0, 3))); 
       }
 
     }
   } else if(!isTartilPlaying && flagShow){
-    // Bersihkan 2 kotak tersebut jika tartil mati
     lcd.setCursor(13, 1);
     lcd.print("   ");
     flagShow = false;

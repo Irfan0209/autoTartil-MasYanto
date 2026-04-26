@@ -60,7 +60,7 @@ IPAddress subnet(255, 255, 255, 0);
 #define MAX_FOLDER  3
 #define JEDA_ANTAR_TARTIL 20 //500 jeda antar file tartil dalam milidetik
 
-//#define DEBUG 1
+#define DEBUG 1
 
 struct WaktuConfig {
   bool aktif;
@@ -163,17 +163,6 @@ bool showingVolume = false;
 int8_t lastVolume = -1;
 uint32_t lastReadTime = 0;
 
-byte ikonSpeaker[8] = {
-  0b00001, //      *
-  0b00011, //     **
-  0b01111, //   ****
-  0b01111, //   ****
-  0b01111, //   ****
-  0b00011, //     **
-  0b00001, //      *
-  0b00000  //
-};
-
 // 1: Bar Rendah
 byte barLow[8] = {
   B00000, B00000, B00000, B00000, B00000, B00000, B11111, B11111
@@ -187,18 +176,6 @@ byte barMid[8] = {
 // 3: Bar Tinggi
 byte barHigh[8] = {
   B00000, B00000, B11111, B11111, B11111, B11111, B11111, B11111
-};
-
-// Logo Speaker Mati / Mute (Speaker dengan tanda X)
-byte speakerMute[8] = {
-  B00000,
-  B10001,
-  B01010,
-  B00100,
-  B01010,
-  B10001,
-  B00000,
-  B00000
 };
 
 byte frame1[8] = {B11111,0,0,0,0,0,0,0}; // Atas
@@ -221,7 +198,42 @@ void getData(const String& input) {
       uint8_t indexKoreksi = atoi(ptr);
       dataIhty[indexSholat] = indexKoreksi;
       saveToEEPROM();
+      butuhHitungJadwal = true;
+      return;
     } 
+
+    // Gunakan atof() untuk konversi ke float (bilangan desimal)
+    else if (key_len == 2 && strncmp(data, "Lt", 2) == 0) {
+      config.latitude = roundf(atof(ptr) * 1000000.0) / 1000000.0;
+      saveToEEPROM();
+      butuhHitungJadwal = true;
+      return;
+    } else if (key_len == 2 && strncmp(data, "Lo", 2) == 0) {
+      config.longitude = roundf(atof(ptr) * 1000000.0) / 1000000.0;
+      saveToEEPROM();
+      butuhHitungJadwal = true;
+      return;
+    } 
+    
+    else if (key_len == 2 && strncmp(data, "Tz", 2) == 0) {
+      config.zonawaktu = atoi(ptr);
+      saveToEEPROM();
+      butuhHitungJadwal = true;
+      return;
+    } else if (key_len == 2 && strncmp(data, "Al", 2) == 0) {
+      config.altitude = atoi(ptr);
+      saveToEEPROM();
+      butuhHitungJadwal = true;
+      return;
+    } 
+
+//    else if (key_len == 2 && strncmp(data, "Da", 2) == 0) {
+//      config.durasiadzan = atoi(ptr);
+//      EEPROM.write(ADDR_DURASIADZAN, config.durasiadzan & 0xFF);
+//      EEPROM.write(ADDR_DURASIADZAN + 1, (config.durasiadzan >> 8) & 0xFF);
+//      return;
+//    } 
+    
     else if (key_len == 6 && strncmp(data, "status", 6) == 0) {
       bool state = atoi(ptr);
       if (state) {
@@ -231,12 +243,14 @@ void getData(const String& input) {
         }
         Serial.println(F("PANEL_OK"));
       }
+      return;
     }   
     else if (key_len == 6 && strncmp(data, "jadwal", 6) == 0) {
       stateSendSholat = atoi(ptr);
+      return;
     } 
   }
-  butuhHitungJadwal = true;
+ 
 }
 
 void handleSetTime() {
@@ -420,10 +434,10 @@ void startUpAnimation() {
   for (uint8_t i = 0; i < 20; i++) {
     lcd.setCursor(14, 0); // Pojok kanan atas
     switch (i % 4) {
-      case 0: lcd.write(byte(5)); break;
-      case 1: lcd.write(byte(6)); break;
-      case 2: lcd.write(byte(7)); break;
-      case 3: lcd.write(byte(0)); break;
+      case 0: lcd.write(byte(3)); break;
+      case 1: lcd.write(byte(4)); break;
+      case 2: lcd.write(byte(5)); break;
+      case 3: lcd.write(byte(6)); break;
     };
     
     // Tambahkan titik-titik di baris kedua agar tidak kosong
@@ -452,22 +466,16 @@ void setup() {
   
   lcd.begin();
   lcd.backlight();
-  //lcd.createChar(0, ikonSpeaker);
-  lcd.createChar(1, speakerMute);
-//  lcd.createChar(2, specFrame1);
-//  lcd.createChar(3, specFrame2);
-//  lcd.createChar(4, specFrame3);
-  lcd.createChar(2, barLow);
-  lcd.createChar(3, barMid);
-  lcd.createChar(4, barHigh);
-  lcd.createChar(5, frame1);
-  lcd.createChar(6, frame2);
-  lcd.createChar(7, frame3);
-  lcd.createChar(0, frame4);
+ 
+ // lcd.createChar(0, speakerMute);
+  lcd.createChar(0, barLow);
+  lcd.createChar(1, barMid);
+  lcd.createChar(2, barHigh);
+  lcd.createChar(3, frame1);
+  lcd.createChar(4, frame2);
+  lcd.createChar(5, frame3);
+  lcd.createChar(6, frame4);
 
-//  dwCtr(0,0,"AUTO TARTIL");
-//  dwCtr(0,1,"V1");
-  
   uint8_t rtn = I2C_ClearBus(); // clear the I2C bus first before calling Wire.begin()
     if (rtn != 0) {
       Serial.println(F("I2C bus error. Could not clear"));
@@ -497,11 +505,15 @@ void setup() {
     while (1);
   }
   loadFromEEPROM();
+  
   delay(1000);
+  
   AP_init();
   dfplayer.enableDAC(); // Pakai output DAC (line out)
   Serial.println("Sistem Auto Tartil Siap.");
+  
   delay(50);
+  
   dfplayer.volume(volumeDFPlayer);
   digitalWrite(RELAY_PIN, LOW); // Awal mati
   lcd.clear();
@@ -525,7 +537,7 @@ void loop() {
   }
   esp_task_wdt_reset();
   server.handleClient();
-  bacaDataSerial();
+  //bacaDataSerial();
   cekDanPutarSholatNonBlocking();
   cekSelesaiTartil();
   cekSelesaiAdzan();
