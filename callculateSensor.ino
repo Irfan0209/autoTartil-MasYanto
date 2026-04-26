@@ -23,7 +23,7 @@ void readSensor(){
     // Tetap gunakan pengecekan perubahan agar tidak spamming DFPlayer
     if (abs(currentVolume - lastVolume) >= 1) {
         lastVolume = currentVolume;
-        // myDFPlayer.volume(currentVolume);
+         dfplayer.volume(currentVolume);
    
       Serial.print("Update Volume ke DFPlayer: ");
       Serial.println(currentVolume);

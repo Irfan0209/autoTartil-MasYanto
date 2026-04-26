@@ -125,12 +125,15 @@ void animateSpectrum() {
 //  lcd.setCursor(13, 1);
 //  lcd.write(byte(0));
   if(adzan) return;
+  if(showingVolume) return;
+  
+  static bool flagShow = false;
   
   if (isTartilPlaying) {
     static uint32_t prevSpectrumMillis = 0;
-  
+    flagShow = true;
     // Update animasi setiap 250 milidetik
-    if (millis() - prevSpectrumMillis >= 150) { 
+    if (millis() - prevSpectrumMillis >= 100) { 
       prevSpectrumMillis = millis();
       
       // Cetak 3 bar acak di indeks 13, 14, dan 15
@@ -141,10 +144,11 @@ void animateSpectrum() {
       }
 
     }
-  } else {
+  } else if(!isTartilPlaying && flagShow){
     // Bersihkan 2 kotak tersebut jika tartil mati
     lcd.setCursor(13, 1);
     lcd.print("   ");
+    flagShow = false;
   }
 }
 
