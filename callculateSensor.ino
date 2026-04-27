@@ -1,5 +1,6 @@
 
 void readSensor(){
+  if(adzan) return;
   uint32_t currentMillis = millis();
   
   // Variabel Kontrol Tampilan LCD
@@ -13,10 +14,10 @@ void readSensor(){
 
     uint32_t sum = 0;
     // 50 sampel tanpa delay di dalam loop for
-    for (uint8_t i = 0; i < 50; i++) {
+    for (uint8_t i = 0; i < 60; i++) {
         sum += analogRead(potPin);
     }
-    uint16_t averageRaw = sum / 50;
+    uint16_t averageRaw = sum / 60;
 
      currentVolume = map(averageRaw, 0, 4095, 0, 30);
     
@@ -25,9 +26,9 @@ void readSensor(){
         lastVolume = currentVolume;
          dfplayer.volume(currentVolume);
    
-      Serial.print("Update Volume ke DFPlayer: ");
-      Serial.println(currentVolume);
-
+//      Serial.print("Update Volume ke DFPlayer: ");
+//      Serial.println(currentVolume);
+      //volumeDFPlayer = currentVolume;
       // Aktifkan mode tampilan volume
       showingVolume = true;
       volumeDisplayMillis = currentMillis; 
@@ -39,6 +40,7 @@ void readSensor(){
   if (showingVolume) {
     if (currentMillis - volumeDisplayMillis >= displayDuration) {
       showingVolume = false;
+      //saveToEEPROM();
       show = ANIM_CLOCK;
       lcd.clear(); // Bersihkan bekas tampilan volume
       return;

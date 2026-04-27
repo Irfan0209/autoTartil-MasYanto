@@ -66,7 +66,8 @@ void cekDanPutarSholatNonBlocking() {
       //================================/*/
       isTartilPlaying = true;
       dfplayer.volume(volumeDFPlayer);
-      digitalWrite(RELAY_PIN, LOW);//relay NYALA
+      //digitalWrite(RELAY_PIN, LOW);//relay NYALA
+      Relay(1);
       currentCfg = &cfg;
       lastTriggerMillis = millis();
       sudahEksekusi = true;
@@ -176,7 +177,8 @@ void cekSelesaiTartil() {
 void matikanSemuaAudio() {
   dfplayer.stop();
   isTartilPlaying = false;
-  digitalWrite(RELAY_PIN, HIGH);//relay mati
+  //digitalWrite(RELAY_PIN, HIGH);//relay mati
+  Relay(0);
   relayMenungguMati = false;
   tartilSedangDiputar = false;
   adzanSedangDiputar = false;
@@ -192,7 +194,8 @@ void cekSelesaiAdzan() {
 
     if (adzanCounter >= targetDurasiAdzan) {
       dfplayer.stop();
-      digitalWrite(RELAY_PIN, HIGH);//relay mati
+      //digitalWrite(RELAY_PIN, HIGH);//relay mati
+      Relay(0);
       adzanSedangDiputar = false;
       isTartilPlaying = false;
      // Serial.println("Adzan selesai. Relay dimatikan.");

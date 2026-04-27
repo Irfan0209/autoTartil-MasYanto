@@ -60,6 +60,7 @@ void check() {
           adzan = 1;
           reset_x = 1;
           show = ANIM_ADZAN;
+          lcd.clear();
           adzanFlag[counter] = true;
         }
       }

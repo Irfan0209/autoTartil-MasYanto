@@ -97,6 +97,7 @@ void drawAzzan()
     if ((Tmr - lsRn) > 1500 && (ct > limit))
     {
         show = ANIM_CLOCK;
+        adzan = 0;
         ct = 0;
         Buzzer(0);
         lcd.clear();
